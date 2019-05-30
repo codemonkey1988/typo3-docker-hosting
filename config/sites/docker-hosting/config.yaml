@@ -1,0 +1,17 @@
+rootPageId: 1
+base: '%env(BASE_URL)%'
+languages:
+  -
+    title: German
+    enabled: true
+    languageId: '0'
+    base: /
+    typo3Language: de
+    locale: de_DE.UTF-8
+    iso-639-1: de
+    navigationTitle: Deutsch
+    hreflang: de-DE
+    direction: ''
+    flag: de
+routes: []
+baseVariants: {  }

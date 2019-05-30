@@ -1,0 +1,13 @@
+/backup/source/logs/nginx/access.log {
+    daily
+    missingok
+    rotate 31
+    compress
+    delaycompress
+    notifempty
+    dateext
+    sharedscripts
+    postrotate
+            [ -f /var/run/nginx.pid ] && kill -USR1 `cat /var/run/nginx.pid`
+    endscript
+}

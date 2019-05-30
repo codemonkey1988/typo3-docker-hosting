@@ -1,0 +1,151 @@
+version: '3.6'
+
+services:
+  # Nginx Container (does not container PHP)
+  nginx:
+    container_name: nginx
+    image: docker-hosting/nginx
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - internal
+    volumes:
+      - type: bind
+        source: ./../shared/data/typo3/fileadmin
+        target: /app/public/fileadmin
+      - type: bind
+        source: ./../shared/data/typo3/assets
+        target: /app/public/typo3temp/assets
+      - type: bind
+        source: ./../shared/logs/nginx
+        target: /log/nginx
+      # Certbot directories
+      - type: bind
+        source: ./../shared/ssl/conf
+        target: /etc/letsencrypt
+      - type: bind
+        source: ./../shared/ssl/www
+        target: /app/certbot
+    depends_on:
+      - php
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  # Separate PHP container.
+  php:
+    container_name: php
+    image: docker-hosting/php
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - TYPO3_TRUSTED_HOSTS_PATTERN=docker-hosting\.localhost
+      - TYPO3_INSTALL_SITE_NAME=Docker Hosting
+      - BASE_URL=https://docker-hosting.localhost
+      - TYPO3_CONTEXT=Production
+    networks:
+      - internal
+    volumes:
+      - type: bind
+        source: ./../shared/data/typo3/cache
+        target: /app/var/cache
+      - type: bind
+        source: ./../shared/logs/typo3
+        target: /app/var/log
+      - type: bind
+        source: ./../shared/data/typo3/assets
+        target: /app/public/typo3temp/assets
+      - type: bind
+        source: ./../shared/data/typo3/fileadmin
+        target: /app/public/fileadmin
+      - type: bind
+        source: ./../shared/logs/php
+        target: /log/php
+    depends_on:
+      - db
+
+  # Database - MariaDB is used because the creator also uses Ddev and want to keep prod as close as possible.
+  # Feel free to switch to MySQL.
+  db:
+    container_name: db
+    image: mariadb:10.2
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --general-log-file=/log/mysql/general.log --log-error=/log/mysql/error.log --slow-query-log-file=/log/mysql/slow-queries.log
+    restart: always
+    ports:
+      - 3306:3306
+    env_file:
+      - .env
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+    networks:
+      - internal
+    volumes:
+      - type: bind
+        source: ./../shared/data/mysql
+        target: /var/lib/mysql
+      - type: bind
+        source: ./../shared/logs/mysql
+        target: /log/mysql
+
+  # Redis for faster TYPO§ caching.
+  redis:
+    container_name: redis
+    image: redis:4
+    hostname: redis
+    restart: always
+    networks:
+      - internal
+
+  # Not used for local. Use it to receive lets encrypt certificates for your production environment.
+  # See https://raw.githubusercontent.com/wmnnd/nginx-certbot/master/init-letsencrypt.sh for init script.
+  #certbot:
+  #  container_name: certbot
+  #  image: certbot/certbot
+  #  restart: always
+  #  networks:
+  #    - internal
+  #  volumes:
+  #    - type: bind
+  #      source: ./../shared/ssl/conf
+  #      target: /etc/letsencrypt
+  #    - type: bind
+  #      source: ./../shared/ssl/www
+  #      target: /app/certbot
+  #  entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;' & crond -f"
+
+  # Container to run backup scripts so that there is not need for anything on the host machine.
+  backup:
+    container_name: backup
+    image: docker-hosting/backup
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - BACKUP_DESTINATION=/backup/destination
+      - KEEP_DATABASE_BACKUPS=180
+      - KEEP_FILE_BACKUPS=6
+    networks:
+      - internal
+    volumes:
+      - type: bind
+        source: ./../shared/backup
+        target: /backup/destination
+      - type: bind
+        source: ./../shared/data/typo3/fileadmin
+        target: /backup/source/data/typo3/fileadmin
+      - type: bind
+        source: ./../shared/logs
+        target: /backup/source/logs
+      - type: bind
+        source: ./../shared/ssl
+        target: /backup/source/ssl
+    depends_on:
+      - db
+networks:
+  internal:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.0.0/24

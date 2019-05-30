@@ -1,0 +1,2 @@
+*/15 * * * * /app/env.sh; /usr/local/bin/php /app/public/typo3/sysext/core/bin/typo3 scheduler:run
+3    * * * * /app/env.sh; /usr/local/bin/php /app/public/typo3/sysext/core/bin/typo3 referenceindex:update
