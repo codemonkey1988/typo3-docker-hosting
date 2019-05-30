@@ -1,6 +1,6 @@
 {
   "name": "codemonkey1988/docker-hosting",
-  "description" : "Example TYPO§ site for docker hosting",
+  "description" : "Example TYPO3 site for docker hosting",
   "license": "GPL-2.0-or-later",
   "config": {
     "platform": {

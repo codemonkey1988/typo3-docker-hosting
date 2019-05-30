@@ -88,7 +88,7 @@ services:
         source: ./../shared/logs/mysql
         target: /log/mysql
 
-  # Redis for faster TYPO§ caching.
+  # Redis for faster TYPO3 caching.
   redis:
     container_name: redis
     image: redis:4
