@@ -58,10 +58,9 @@ return [
         'versionNumberInFilename' => 'embed',
     ],
     'GFX' => [
-        'processor' => 'ImageMagick',
+        'processor' => 'GraphicsMagick',
         'processor_allowTemporaryMasksAsPng' => false,
-        'processor_colorspace' => 'sRGB',
-        'processor_effects' => true,
+        'processor_effects' => false,
         'processor_enabled' => true,
         'processor_path' => '/usr/bin/',
         'processor_path_lzw' => '/usr/bin/',
