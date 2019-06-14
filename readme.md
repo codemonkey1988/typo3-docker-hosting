@@ -10,7 +10,7 @@ Run this command to build the necessary docker containers.
     
     docker build -t docker-hosting/nginx -f .docker/nginx/Dockerfile .
     docker build -t docker-hosting/php -f .docker/php/Dockerfile .
-    docker build -t docker-hosting/backup -f .docker//backup/Dockerfile .
+    docker build -t docker-hosting/backup -f .docker/backup/Dockerfile .
     
 ## Generate SSL self-signed certificates (for testing)
 
